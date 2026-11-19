@@ -10,6 +10,24 @@ def calculate_mac(pattern, filter_matrix):
 
     return score
 
+def flatten_matrix(matrix):
+    flat = []
+
+    for row in matrix:
+        for value in row:
+            flat.append(value)
+
+    return flat
+
+
+def calculate_mac_flat(flat_pattern, flat_filter):
+    score = 0.0
+
+    for k in range(len(flat_pattern)):
+        score += flat_pattern[k] * flat_filter[k]
+
+    return score
+
 
 def input_matrix(name):
     matrix = []
@@ -246,10 +264,157 @@ def run_performance_analysis(filters):
 
         print(f"{size}x{size:<7} {average_ms:<18.6f} {operations:<10}")
 
+def compare_mac_performance():
+    print("\n=== 보너스 1: 메모리 접근 최적화 비교 ===")
+
+    repeat = 10000
+
+      # 보너스 2의 패턴 생성 함수를 성능 분석에 재활용
+    test_matrices = []
+
+    for size in [3, 5, 13, 25]:
+        cross_pattern = generate_cross_pattern(size)
+        test_matrices.append((size, cross_pattern))
+        
+    print(f"반복 횟수: {repeat}회")
+    print(f"{'크기':<10} {'2차원(ms)':<15} {'1차원(ms)':<15} {'결과 일치'}")
+    print("-" * 55)
+
+    for size, matrix in test_matrices:
+        pattern = matrix
+        filter_matrix = matrix
+
+        # 1. 배열 변환 시간 측정
+        conversion_start = time.perf_counter()
+
+        for _ in range(repeat):
+            flat_pattern = flatten_matrix(pattern)
+            flat_filter = flatten_matrix(filter_matrix)
+
+        conversion_ms = (
+            time.perf_counter() - conversion_start
+        ) * 1000 / repeat
+
+        # 2. 기존 2차원 MAC 측정
+        start = time.perf_counter()
+
+        for _ in range(repeat):
+            original_score = calculate_mac(pattern, filter_matrix)
+
+        original_ms = (
+            time.perf_counter() - start
+        ) * 1000 / repeat
+
+        # 3. 변경된 1차원 MAC 측정
+        start = time.perf_counter()
+
+        for _ in range(repeat):
+            flat_score = calculate_mac_flat(flat_pattern, flat_filter)
+
+        flat_ms = (
+            time.perf_counter() - start
+        ) * 1000 / repeat
+
+        # 4. 계산 결과 일치 확인
+        same = abs(original_score - flat_score) < 1e-9
+
+        # 5. 결과 출력
+        print(
+            f"{size}x{size:<7} "
+            f"{original_ms:<15.6f} "
+            f"{flat_ms:<15.6f} "
+            f"{same}"
+        )
+
+        print(
+            f"  배열 변환 평균: {conversion_ms:.6f} ms | "
+            f"변환 포함 1차원 평균: {conversion_ms + flat_ms:.6f} ms"
+        )
+
+def generate_cross_pattern(n):
+    pattern = []
+
+    for i in range(n):
+        row = []
+
+        for j in range(n):
+            if i == n // 2 or j == n // 2:
+                row.append(1)
+            else:
+                row.append(0)
+
+        pattern.append(row)
+
+    return pattern
+
+
+def generate_x_pattern(n):
+    pattern = []
+
+    for i in range(n):
+        row = []
+
+        for j in range(n):
+            if i == j or i + j == n - 1:
+                row.append(1)
+            else:
+                row.append(0)
+
+        pattern.append(row)
+
+    return pattern
+
+def run_pattern_generator():
+    print("\n=== 보너스 2: 패턴 자동 생성기 ===")
+
+    while True:
+        try:
+            n = int(input("패턴 크기 N 입력 (3 이상의 홀수): "))
+
+            if n < 3 or n % 2 == 0:
+                print("오류: 3 이상의 홀수를 입력하세요.")
+                continue
+
+            break
+
+        except ValueError:
+            print("오류: 정수를 입력하세요.")
+
+    cross_pattern = generate_cross_pattern(n)
+    x_pattern = generate_x_pattern(n)
+
+    print(f"\n=== {n}x{n} Cross 패턴 ===")
+    for row in cross_pattern:
+        print(" ".join(map(str, row)))
+
+    print(f"\n=== {n}x{n} X 패턴 ===")
+    for row in x_pattern:
+        print(" ".join(map(str, row)))
+
+    # 생성된 패턴을 기존 MAC 함수에 재활용
+    cross_score = calculate_mac(cross_pattern, cross_pattern)
+    x_score = calculate_mac(cross_pattern, x_pattern)
+
+    print("\n=== 생성 패턴 MAC 테스트 ===")
+    print("입력 패턴: Cross")
+    print("Cross 필터 점수:", cross_score)
+    print("X 필터 점수:", x_score)
+
+    if abs(cross_score - x_score) < 1e-9:
+        result = "UNDECIDED"
+    elif cross_score > x_score:
+        result = "Cross"
+    else:
+        result = "X"
+
+    print("최종 판정:", result)
+
 def main():
     print("=== Mini NPU Simulator ===")
     print("1. 사용자 입력 (3x3)")
     print("2. data.json 분석")
+    print("3. MAC 성능 비교(보너스1)")
+    print("4. 패턴 자동 생성(보너스2)")
 
     while True:
         choice = input("선택: ")
@@ -260,8 +425,14 @@ def main():
         elif choice == "2":
             run_json_mode()
             break
+        elif choice == "3":
+            compare_mac_performance()
+            break
+        elif choice == "4":
+            run_pattern_generator()
+            break
         else:
-            print("오류: 1 또는 2를 입력하세요.")
+            print("오류: 1, 2, 3 또는 4을 입력하세요.")
 
 
 if __name__ == "__main__":
