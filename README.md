@@ -300,15 +300,37 @@ python3 -m py_compile main.py
 
 ## 10. 실행 결과 캡처
 
-실행 화면 캡처는 추후 `screenshots/` 폴더에 추가할 예정입니다.
+다음은 Ubuntu 환경에서 Mini NPU Simulator를 직접 실행한 결과입니다.
 
-예정 파일:
+### 10.1 사용자 입력 및 MAC 판정
 
-- `01-user-input.png`: 사용자 입력 및 MAC 판정 결과
-- `02-input-error.png`: 잘못된 입력 처리
-- `03-json-analysis.png`: JSON 패턴별 분석
-- `04-performance.png`: 크기별 성능 분석
-- `05-result-summary.png`: 전체 테스트 결과 요약
+3×3 Cross 필터, X 필터, 입력 패턴을 직접 입력하고 MAC 점수와 최종 판정을 확인했습니다.
+
+![사용자 입력 및 MAC 판정 결과](screenshots/01-user-input.png)
+
+### 10.2 잘못된 입력 처리
+
+숫자 개수가 부족하거나 문자가 입력되었을 때 오류 메시지를 출력하고, 프로그램을 종료하지 않고 다시 입력받는 기능을 확인했습니다.
+
+![입력 오류 처리 결과](screenshots/02-input-error.png)
+
+### 10.3 JSON 자동 분석
+
+`data.json`에서 총 6개 패턴을 읽어 각 패턴의 Cross/X MAC 점수와 PASS/FAIL 판정 결과를 출력했습니다.
+
+![JSON 자동 분석 결과](screenshots/03-json-analysis.png)
+
+### 10.4 크기별 MAC 연산 성능 분석
+
+3×3, 5×5, 13×13, 25×25 행렬의 MAC 연산을 각각 10회 반복하여 평균 실행 시간과 곱셈 횟수를 비교했습니다.
+
+![MAC 연산 성능 분석 결과](screenshots/04-performance.png)
+
+### 10.5 전체 테스트 결과 요약
+
+총 6개 테스트 중 PASS 3개, FAIL 3개가 발생했습니다. 실패한 3개는 모두 epsilon 동점 처리 규칙에 따라 UNDECIDED로 판정된 케이스입니다.
+
+![전체 테스트 결과 요약](screenshots/05-result-summary.png)
 
 ## 11. 프로젝트를 통해 확인한 내용
 
