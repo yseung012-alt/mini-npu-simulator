@@ -91,6 +91,21 @@ def run_user_mode():
 
     print("최종 판정:", result)
 
+def normalize_label(raw_label):
+    label_map = {
+        "+": "Cross",
+        "cross": "Cross",
+        "x": "X"
+    }
+
+    normalized = str(raw_label).strip().lower()
+    result = label_map.get(normalized)
+
+    if result is None:
+        raise ValueError("알 수 없는 expected 라벨")
+
+    return result
+
 def run_json_mode():
     print("\n=== data.json 분석 ===")
 
@@ -143,16 +158,7 @@ def run_json_mode():
             expected_raw = case_data["expected"]
 
             # 라벨 정규화
-            label_map = {
-                "+": "Cross",
-                "cross": "Cross",
-                "x": "X"
-            }
-
-            expected = label_map.get(str(expected_raw).strip().lower())
-
-            if expected is None:
-                raise ValueError("알 수 없는 expected 라벨")
+            expected = normalize_label(expected_raw)
 
             # 행렬 크기 검증
             matrices = {
@@ -219,7 +225,6 @@ def run_json_mode():
         print("\n실패 케이스:")
         for case_name, reason in failed_cases:
             print(f"- {case_name}: {reason}")
-           
     run_performance_analysis(filters)
 
 def benchmark_mac(pattern, filter_matrix, repeat=10):
@@ -275,7 +280,7 @@ def compare_mac_performance():
     for size in [3, 5, 13, 25]:
         cross_pattern = generate_cross_pattern(size)
         test_matrices.append((size, cross_pattern))
-        
+
     print(f"반복 횟수: {repeat}회")
     print(f"{'크기':<10} {'2차원(ms)':<15} {'1차원(ms)':<15} {'결과 일치'}")
     print("-" * 55)
